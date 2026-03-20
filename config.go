@@ -15,6 +15,8 @@ const (
 	defaultTenantID    = "consumers"
 	clientIDEnvName    = "MAIL_CODE_GET_CLIENT_ID"
 	tenantIDEnvName    = "MAIL_CODE_GET_TENANT_ID"
+	dataDirEnvName     = "OUTLOOK_MAIL_GET_DATA_DIR"
+	defaultDataDirName = ".outlook-mail-get"
 	deviceLoginTimeout = 10 * time.Minute
 )
 
@@ -65,15 +67,24 @@ func normalizeEmail(email string) string {
 }
 
 func dataDir(create bool) (string, error) {
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", fmt.Errorf("获取当前项目目录失败: %w", err)
+	if dir := strings.TrimSpace(os.Getenv(dataDirEnvName)); dir != "" {
+		if create {
+			if err := os.MkdirAll(dir, 0700); err != nil {
+				return "", fmt.Errorf("创建数据目录失败: %w", err)
+			}
+		}
+		return dir, nil
 	}
 
-	dir := filepath.Join(wd, "data")
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("获取用户 Home 目录失败: %w", err)
+	}
+
+	dir := filepath.Join(homeDir, defaultDataDirName)
 	if create {
 		if err := os.MkdirAll(dir, 0700); err != nil {
-			return "", fmt.Errorf("创建 data 目录失败: %w", err)
+			return "", fmt.Errorf("创建数据目录失败: %w", err)
 		}
 	}
 

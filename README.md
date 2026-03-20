@@ -63,13 +63,13 @@ outlook-mail-get fetch --limit 5
 outlook-mail-get fetch --client-id "your-app-client-id" --tenant-id "consumers" --limit 5
 ```
 
-第一次成功运行后，CLI 也会把这两个值写入当前项目的 `data/config.json`，后续可直接运行：
+第一次成功运行后，CLI 也会把这两个值写入 `~/.outlook-mail-get/config.json`，后续可直接运行：
 
 ```bash
 outlook-mail-get fetch --limit 5
 ```
 
-首次授权成功后，`data/config.json` 里还会补充当前登录邮箱和账号标识，方便你确认现在绑的是哪个 Hotmail/Outlook 账号。
+首次授权成功后，`~/.outlook-mail-get/config.json` 里还会补充当前登录邮箱和账号标识，方便你确认现在绑的是哪个 Hotmail/Outlook 账号。
 
 ## 多账号
 
@@ -132,15 +132,17 @@ JSON 模式下会返回：
 
 ## 本地认证数据
 
-工具会在当前项目的 `data/` 目录下保存项目级配置和认证状态：
+工具会在用户 Home 目录下的隐藏目录 `~/.outlook-mail-get/` 中保存配置和认证状态：
 
-- `data/config.json`
-- `data/token-cache.bin`
+- `~/.outlook-mail-get/config.json`
+- `~/.outlook-mail-get/token-cache.bin`
 
 其中：
 
 - `config.json` 保存 `client_id`、`tenant_id`、默认邮箱，以及多个账号的邮箱标识、账号 ID
-- `token-cache.bin` 保存本项目专用的本地 OAuth token cache
+- `token-cache.bin` 保存本机当前用户的本地 OAuth token cache
+
+如果需要临时改用其他目录，可以设置环境变量 `OUTLOOK_MAIL_GET_DATA_DIR`。
 
 当前版本不再使用 macOS Keychain / `azidentity/cache`。
 

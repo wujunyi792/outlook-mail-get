@@ -18,9 +18,11 @@ func withTempWorkingDir(t *testing.T) {
 
 	tempDir := t.TempDir()
 	projectDir := filepath.Join(tempDir, "project")
+	dataDir := filepath.Join(tempDir, "user-home", defaultDataDirName)
 	if err := os.MkdirAll(projectDir, 0700); err != nil {
 		t.Fatalf("MkdirAll() error: %v", err)
 	}
+	t.Setenv(dataDirEnvName, dataDir)
 	if err := os.Chdir(projectDir); err != nil {
 		t.Fatalf("Chdir() error: %v", err)
 	}

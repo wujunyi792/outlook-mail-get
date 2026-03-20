@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -42,6 +43,22 @@ func TestResolveConfigRequiresClientID(t *testing.T) {
 
 	if _, err := resolveFetchConfig(fetchOptions{limit: defaultLimit}); err == nil {
 		t.Fatal("expected missing client ID error")
+	}
+}
+
+func TestDataDirUsesEnvironmentOverride(t *testing.T) {
+	override := filepath.Join(t.TempDir(), ".outlook-mail-get-test")
+	t.Setenv(dataDirEnvName, override)
+
+	dir, err := dataDir(true)
+	if err != nil {
+		t.Fatalf("dataDir returned error: %v", err)
+	}
+	if dir != override {
+		t.Fatalf("expected override dir %q, got %q", override, dir)
+	}
+	if _, err := os.Stat(dir); err != nil {
+		t.Fatalf("expected override dir to be created, got %v", err)
 	}
 }
 
