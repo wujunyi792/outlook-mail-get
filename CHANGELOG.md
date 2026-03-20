@@ -1,3 +1,8 @@
+## 0.1.2 - 2026-03-20
+
+### Documentation
+- Redesign the README homepage with badges, quick start, command map, and richer usage sections
+
 ## 0.1.1 - 2026-03-20
 
 ### Fixes
