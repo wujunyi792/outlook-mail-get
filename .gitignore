@@ -1,0 +1,20 @@
+.DS_Store
+
+# IDE
+.idea/
+
+# Local app state
+data/
+
+# Build outputs
+mail-code-get
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go test artifacts
+*.test
+*.out
+
