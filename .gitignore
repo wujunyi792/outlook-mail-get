@@ -8,6 +8,7 @@ data/
 
 # Build outputs
 mail-code-get
+outlook-mail-get
 *.exe
 *.exe~
 *.dll
@@ -17,4 +18,3 @@ mail-code-get
 # Go test artifacts
 *.test
 *.out
-

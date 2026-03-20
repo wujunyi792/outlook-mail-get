@@ -1,4 +1,4 @@
-# mail-code-get
+# outlook-mail-get
 
 一个面向 Hotmail/Outlook.com 的 Go CLI，使用微软官方推荐的 `OAuth2 + Microsoft Graph` 读取最近几条邮件，默认覆盖：
 
@@ -26,6 +26,22 @@ Outlook.com 个人邮箱现在要求新式身份验证。Basic Auth/普通密码
 
 拿到应用的 `Application (client) ID` 后即可运行。
 
+## 安装
+
+直接安装：
+
+```bash
+go install github.com/wujunyi792/outlook-mail-get@latest
+```
+
+安装后可直接使用：
+
+```bash
+outlook-mail-get --help
+```
+
+本地开发时也可以继续使用 `go run .`。
+
 ## 用法
 
 推荐先设置环境变量：
@@ -38,19 +54,19 @@ export MAIL_CODE_GET_TENANT_ID="consumers"
 然后运行：
 
 ```bash
-go run . fetch --limit 5
+outlook-mail-get fetch --limit 5
 ```
 
 也可以直接传参数：
 
 ```bash
-go run . fetch --client-id "your-app-client-id" --tenant-id "consumers" --limit 5
+outlook-mail-get fetch --client-id "your-app-client-id" --tenant-id "consumers" --limit 5
 ```
 
 第一次成功运行后，CLI 也会把这两个值写入当前项目的 `data/config.json`，后续可直接运行：
 
 ```bash
-go run . fetch --limit 5
+outlook-mail-get fetch --limit 5
 ```
 
 首次授权成功后，`data/config.json` 里还会补充当前登录邮箱和账号标识，方便你确认现在绑的是哪个 Hotmail/Outlook 账号。
@@ -62,13 +78,13 @@ go run . fetch --limit 5
 - 查看当前项目已缓存账号：
 
 ```bash
-go run . accounts list
+outlook-mail-get accounts list
 ```
 
 - 指定某个邮箱读取邮件：
 
 ```bash
-go run . fetch --email someone@hotmail.com --limit 5
+outlook-mail-get fetch --email someone@hotmail.com --limit 5
 ```
 
 - 如果指定的邮箱本地还没有缓存，CLI 会引导你做一次设备码登录，并把该账号加入当前项目的账号列表。
@@ -78,20 +94,20 @@ go run . fetch --email someone@hotmail.com --limit 5
 输出 JSON：
 
 ```bash
-go run . fetch --client-id "your-app-client-id" --json --limit 5
+outlook-mail-get fetch --client-id "your-app-client-id" --json --limit 5
 ```
 
 如果需要强制重新登录：
 
 ```bash
-go run . auth reset
-go run . fetch --client-id "your-app-client-id"
+outlook-mail-get auth reset
+outlook-mail-get fetch --client-id "your-app-client-id"
 ```
 
 如果你希望在本次抓取前顺手强制重新登录，也可以直接：
 
 ```bash
-go run . fetch --client-id "your-app-client-id" --reset-auth
+outlook-mail-get fetch --client-id "your-app-client-id" --reset-auth
 ```
 
 ## 默认配置

@@ -1,4 +1,4 @@
-module mail-code-get
+module github.com/wujunyi792/outlook-mail-get
 
 go 1.26.1
 

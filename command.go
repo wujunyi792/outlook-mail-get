@@ -36,7 +36,7 @@ var defaultRuntimeDeps = runtimeDeps{
 
 func newRootCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:           "mail-code-get",
+		Use:           "outlook-mail-get",
 		Short:         "读取最近几封 Hotmail/Outlook 邮件",
 		SilenceUsage:  true,
 		SilenceErrors: true,
