@@ -17,6 +17,8 @@ const (
 	tenantIDEnvName    = "MAIL_CODE_GET_TENANT_ID"
 	dataDirEnvName     = "OUTLOOK_MAIL_GET_DATA_DIR"
 	defaultDataDirName = ".outlook-mail-get"
+	legacyDataDirName  = "data"
+	configFileName     = "config.json"
 	deviceLoginTimeout = 10 * time.Minute
 )
 
@@ -76,12 +78,10 @@ func dataDir(create bool) (string, error) {
 		return dir, nil
 	}
 
-	homeDir, err := os.UserHomeDir()
+	dir, err := userDataDir()
 	if err != nil {
-		return "", fmt.Errorf("获取用户 Home 目录失败: %w", err)
+		return "", err
 	}
-
-	dir := filepath.Join(homeDir, defaultDataDirName)
 	if create {
 		if err := os.MkdirAll(dir, 0700); err != nil {
 			return "", fmt.Errorf("创建数据目录失败: %w", err)
@@ -91,12 +91,79 @@ func dataDir(create bool) (string, error) {
 	return dir, nil
 }
 
+func userDataDir() (string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("获取用户 Home 目录失败: %w", err)
+	}
+
+	return filepath.Join(homeDir, defaultDataDirName), nil
+}
+
+func legacyProjectDataDir() (string, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("获取当前项目目录失败: %w", err)
+	}
+
+	return filepath.Join(wd, legacyDataDirName), nil
+}
+
+func migrateLegacyDataDir() error {
+	if strings.TrimSpace(os.Getenv(dataDirEnvName)) != "" {
+		return nil
+	}
+
+	sourceDir, err := legacyProjectDataDir()
+	if err != nil {
+		return err
+	}
+
+	entries, err := os.ReadDir(sourceDir)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		return fmt.Errorf("读取旧数据目录失败: %w", err)
+	}
+
+	targetDir, err := dataDir(true)
+	if err != nil {
+		return err
+	}
+
+	movedAny := false
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		sourcePath := filepath.Join(sourceDir, entry.Name())
+		targetPath := filepath.Join(targetDir, entry.Name())
+		if _, err := os.Stat(targetPath); err == nil {
+			continue
+		} else if !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("检查目标数据文件失败: %w", err)
+		}
+
+		if err := os.Rename(sourcePath, targetPath); err != nil {
+			return fmt.Errorf("迁移数据文件 %q 失败: %w", entry.Name(), err)
+		}
+		movedAny = true
+	}
+
+	if movedAny {
+		_ = os.Remove(sourceDir)
+	}
+	return nil
+}
+
 func configFilePath(create bool) (string, error) {
 	dir, err := dataDir(create)
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(dir, "config.json"), nil
+	return filepath.Join(dir, configFileName), nil
 }
 
 func loadConfigFile() (persistedConfig, error) {

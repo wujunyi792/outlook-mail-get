@@ -144,6 +144,8 @@ JSON 模式下会返回：
 
 如果需要临时改用其他目录，可以设置环境变量 `OUTLOOK_MAIL_GET_DATA_DIR`。
 
+如果你是从旧版本升级，原来留在项目目录下的 `./data/` 会在执行 `fetch`、`accounts list` 或 `auth reset` 时自动迁移到 `~/.outlook-mail-get/`。
+
 当前版本不再使用 macOS Keychain / `azidentity/cache`。
 
 ## 参考文档

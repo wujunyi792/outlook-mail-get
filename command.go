@@ -125,6 +125,10 @@ func addFetchFlags(flags *pflag.FlagSet, opts *fetchOptions) {
 }
 
 func runFetchCommand(ctx context.Context, out io.Writer, opts fetchOptions, deps runtimeDeps) error {
+	if err := migrateLegacyDataDir(); err != nil {
+		return err
+	}
+
 	cfg, err := resolveFetchConfig(opts)
 	if err != nil {
 		return err
@@ -164,6 +168,10 @@ func runFetchCommand(ctx context.Context, out io.Writer, opts fetchOptions, deps
 }
 
 func runListAccounts(out io.Writer) error {
+	if err := migrateLegacyDataDir(); err != nil {
+		return err
+	}
+
 	cfg, err := loadConfigFile()
 	if err != nil {
 		return err
@@ -172,6 +180,10 @@ func runListAccounts(out io.Writer) error {
 }
 
 func runResetAuth(out io.Writer) error {
+	if err := migrateLegacyDataDir(); err != nil {
+		return err
+	}
+
 	persisted, err := loadConfigFile()
 	if err != nil {
 		return err
