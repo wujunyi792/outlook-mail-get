@@ -1,22 +1,147 @@
-# outlook-mail-get
+# Outlook Mail Fetcher
 
-一个面向 Hotmail/Outlook.com 的 Go CLI，使用微软官方推荐的 `OAuth2 + Microsoft Graph` 读取最近几条邮件，默认覆盖：
+<div align="center">
+
+一个面向 Hotmail / Outlook.com 的 Go CLI。  
+用微软官方推荐的 `OAuth2 + Microsoft Graph` 拉取最近邮件，兼顾多账号、设备码登录和可直接 `go install` 的全局使用体验。
+
+<p>
+  <img src="https://img.shields.io/badge/Go-1.26+-00ADD8?logo=go&logoColor=white" alt="Go">
+  <img src="https://img.shields.io/badge/version-v0.1.1-2ea44f" alt="version">
+  <img src="https://img.shields.io/badge/Auth-Device%20Code%20Flow-0078D4" alt="auth">
+  <img src="https://img.shields.io/badge/API-Microsoft%20Graph-111111" alt="api">
+</p>
+
+</div>
+
+---
+
+## Overview
+
+`outlook-mail-get` 默认会检查这几个系统文件夹：
 
 - `Inbox`
 - `Junk Email`
 - `Deleted Items`
 
-工具会把这些系统文件夹里的最近邮件合并后按时间倒序输出。
+然后把最近邮件合并、按时间倒序输出，适合：
 
-## 为什么不用邮箱密码
+- 快速看验证码邮件
+- 查垃圾箱/垃圾邮件里的确认邮件
+- 在脚本里直接拿 JSON
 
-Outlook.com 个人邮箱现在要求新式身份验证。Basic Auth/普通密码直连 IMAP 已经被逐步拦截，因此这个项目改为：
+## Quick Start
 
-- 用户首次运行时通过设备码登录
-- 本地缓存 OAuth token
-- 后续通过 Microsoft Graph 读取邮件
+### 1. 安装
 
-## 使用前准备
+```bash
+go install github.com/wujunyi792/outlook-mail-get@latest
+```
+
+安装后可以直接运行：
+
+```bash
+outlook-mail-get --help
+```
+
+### 2. 配置环境变量
+
+```bash
+export MAIL_CODE_GET_CLIENT_ID="your-app-client-id"
+export MAIL_CODE_GET_TENANT_ID="consumers"
+```
+
+### 3. 拉取最近邮件
+
+```bash
+outlook-mail-get fetch --limit 5
+```
+
+### 4. 输出 JSON
+
+```bash
+outlook-mail-get fetch --json --limit 5
+```
+
+## Flow
+
+```mermaid
+flowchart LR
+    A["outlook-mail-get fetch"] --> B["Device Code Login (first run)"]
+    B --> C["Microsoft Graph"]
+    C --> D["Inbox / Junk / Deleted Items"]
+    D --> E["Merge + Sort by Time"]
+    E --> F["Table Output / JSON Output"]
+```
+
+## Command Map
+
+| Command | What it does |
+| --- | --- |
+| `outlook-mail-get fetch` | 拉取最近邮件 |
+| `outlook-mail-get fetch --json` | 以 JSON 输出 |
+| `outlook-mail-get fetch --email xxx@hotmail.com` | 指定账号拉取 |
+| `outlook-mail-get fetch --reset-auth` | 本次抓取前强制重新登录 |
+| `outlook-mail-get accounts list` | 查看当前已缓存账号 |
+| `outlook-mail-get auth reset` | 清除本地认证状态 |
+
+## Example Commands
+
+### 直接传参
+
+```bash
+outlook-mail-get fetch \
+  --client-id "your-app-client-id" \
+  --tenant-id "consumers" \
+  --limit 5
+```
+
+### 指定某个邮箱
+
+```bash
+outlook-mail-get fetch --email someone@hotmail.com --limit 5
+```
+
+### 强制重新登录后抓取
+
+```bash
+outlook-mail-get auth reset
+outlook-mail-get fetch --client-id "your-app-client-id"
+```
+
+或者一步完成：
+
+```bash
+outlook-mail-get fetch --client-id "your-app-client-id" --reset-auth
+```
+
+## First Login
+
+首次运行时会走 Device Code Flow：
+
+- CLI 会提示你打开微软登录页
+- 输入设备码
+- 完成授权
+- 之后本地缓存 token，后续通常无需重复登录
+
+> Outlook.com 个人邮箱已经不适合继续走“邮箱密码直连 IMAP”这套老路。  
+> 这个项目默认使用微软官方推荐的认证方式，兼容性和稳定性都更好。
+
+## Multi-Account
+
+当前项目支持缓存多个 Hotmail / Outlook 账号。
+
+- 首次用某个新邮箱抓取时，会自动引导该账号完成一次登录
+- CLI 会把最近一次成功使用的邮箱记为默认账号
+- 不传 `--email` 时，会优先使用默认账号
+
+查看当前缓存账号：
+
+```bash
+outlook-mail-get accounts list
+```
+
+## Microsoft Entra Setup
 
 你需要先在 Microsoft Entra 注册一个应用，并确保：
 
@@ -24,102 +149,33 @@ Outlook.com 个人邮箱现在要求新式身份验证。Basic Auth/普通密码
 2. `Allow public client flows` 已开启
 3. 已添加委托权限 `Mail.Read`
 
-拿到应用的 `Application (client) ID` 后即可运行。
+拿到 `Application (client) ID` 后即可使用。
 
-## 安装
+<details>
+<summary>为什么不用邮箱密码</summary>
 
-直接安装：
+Outlook.com 个人邮箱现在要求新式身份验证。  
+Basic Auth / 普通密码直连 IMAP 已经被逐步拦截，所以这里改成：
 
-```bash
-go install github.com/wujunyi792/outlook-mail-get@latest
-```
+- 首次运行时通过设备码登录
+- 本地缓存 OAuth token
+- 后续通过 Microsoft Graph 读取邮件
 
-安装后可直接使用：
+</details>
 
-```bash
-outlook-mail-get --help
-```
+## Output
 
-本地开发时也可以继续使用 `go run .`。
+### 默认表格输出
 
-## 用法
+列包含：
 
-推荐先设置环境变量：
+- `DATE`
+- `FOLDER`
+- `STATUS`
+- `FROM`
+- `SUBJECT`
 
-```bash
-export MAIL_CODE_GET_CLIENT_ID="your-app-client-id"
-export MAIL_CODE_GET_TENANT_ID="consumers"
-```
-
-然后运行：
-
-```bash
-outlook-mail-get fetch --limit 5
-```
-
-也可以直接传参数：
-
-```bash
-outlook-mail-get fetch --client-id "your-app-client-id" --tenant-id "consumers" --limit 5
-```
-
-第一次成功运行后，CLI 也会把这两个值写入 `~/.outlook-mail-get/config.json`，后续可直接运行：
-
-```bash
-outlook-mail-get fetch --limit 5
-```
-
-首次授权成功后，`~/.outlook-mail-get/config.json` 里还会补充当前登录邮箱和账号标识，方便你确认现在绑的是哪个 Hotmail/Outlook 账号。
-
-## 多账号
-
-当前项目支持缓存多个 Hotmail/Outlook 账号。
-
-- 查看当前项目已缓存账号：
-
-```bash
-outlook-mail-get accounts list
-```
-
-- 指定某个邮箱读取邮件：
-
-```bash
-outlook-mail-get fetch --email someone@hotmail.com --limit 5
-```
-
-- 如果指定的邮箱本地还没有缓存，CLI 会引导你做一次设备码登录，并把该账号加入当前项目的账号列表。
-
-工具会把最近一次成功使用的邮箱记为默认账号；后续不传 `--email` 时优先使用默认账号。
-
-输出 JSON：
-
-```bash
-outlook-mail-get fetch --client-id "your-app-client-id" --json --limit 5
-```
-
-如果需要强制重新登录：
-
-```bash
-outlook-mail-get auth reset
-outlook-mail-get fetch --client-id "your-app-client-id"
-```
-
-如果你希望在本次抓取前顺手强制重新登录，也可以直接：
-
-```bash
-outlook-mail-get fetch --client-id "your-app-client-id" --reset-auth
-```
-
-## 默认配置
-
-- 默认 tenant：`consumers`
-- 默认返回条数：`10`
-- 登录方式：`Device Code Flow`
-- 邮件接口：`Microsoft Graph v1.0`
-
-## 输出字段
-
-JSON 模式下会返回：
+### JSON 输出字段
 
 - `folder`
 - `id`
@@ -130,25 +186,61 @@ JSON 模式下会返回：
 - `message_id`
 - `unread`
 
-## 本地认证数据
+## Local State
 
-工具会在用户 Home 目录下的隐藏目录 `~/.outlook-mail-get/` 中保存配置和认证状态：
+工具会在用户 Home 目录下的隐藏目录 `~/.outlook-mail-get/` 中保存本地状态：
 
-- `~/.outlook-mail-get/config.json`
-- `~/.outlook-mail-get/token-cache.bin`
+```text
+~/.outlook-mail-get/
+├── config.json
+└── token-cache.bin
+```
 
 其中：
 
-- `config.json` 保存 `client_id`、`tenant_id`、默认邮箱，以及多个账号的邮箱标识、账号 ID
+- `config.json` 保存 `client_id`、`tenant_id`、默认邮箱以及账号元数据
 - `token-cache.bin` 保存本机当前用户的本地 OAuth token cache
 
-如果需要临时改用其他目录，可以设置环境变量 `OUTLOOK_MAIL_GET_DATA_DIR`。
+如果需要临时改用其他目录，可以设置：
 
-如果你是从旧版本升级，原来留在项目目录下的 `./data/` 会在执行 `fetch`、`accounts list` 或 `auth reset` 时自动迁移到 `~/.outlook-mail-get/`。
+```bash
+export OUTLOOK_MAIL_GET_DATA_DIR="/your/custom/path"
+```
+
+如果你是从旧版本升级，原来留在项目目录下的 `./data/` 会在执行下列命令时自动迁移到 `~/.outlook-mail-get/`：
+
+- `outlook-mail-get fetch`
+- `outlook-mail-get accounts list`
+- `outlook-mail-get auth reset`
 
 当前版本不再使用 macOS Keychain / `azidentity/cache`。
 
-## 参考文档
+## Defaults
+
+| Item | Value |
+| --- | --- |
+| Default tenant | `consumers` |
+| Default limit | `10` |
+| Auth flow | `Device Code Flow` |
+| Mail API | `Microsoft Graph v1.0` |
+
+## Development
+
+本地开发可以直接：
+
+```bash
+go run . fetch --limit 5
+```
+
+安装检查：
+
+```bash
+go test ./...
+go test -race ./...
+go vet ./...
+```
+
+## References
 
 - [Build Go apps with Microsoft Graph](https://learn.microsoft.com/en-us/graph/tutorials/go-authentication)
 - [Use the Microsoft Graph API to get Outlook mail](https://learn.microsoft.com/en-us/graph/tutorials/go-email)
