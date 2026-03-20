@@ -1,3 +1,9 @@
+## 0.1.1 - 2026-03-20
+
+### Fixes
+- Store local config and token cache under `~/.outlook-mail-get`
+- Automatically migrate legacy project-local `./data/` state into the user data directory on command execution
+
 ## 0.1.0 - 2026-03-20
 
 ### Features
